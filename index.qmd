@@ -43,10 +43,200 @@ There will be three deliverables for this project:
 In lieu of the final exam, you will peer review two classmates' screencasts.
 
 ```{r}
-tuesdata <- tidytuesdayR::tt_load('2023-11-28')
+library(tidytuesdayR)
+library(tidyverse)
+data <- tidytuesdayR::tt_load('2023-11-28')
+data
+head(data)
 
-drwho_episodes <- tuesdata$drwho_episodes
-drwho_directors <- tuesdata$drwho_directors
-drwho_writers <- tuesdata$drwho_writers
+episodes <- data$drwho_episodes
+episodes %>%
+  view()
+
+
+library(ggplot2)
+print(ggplot(episodes, aes(x = first_aired, y = rating))+
+        geom_point()+
+        labs(x = "Time Aired", y = "Episode Rating", title = "Doctor Who Episode Ratings Over Time"))
+
+
+
+class(episodes$first_aired)
+episodes$year <- format(episodes$first_aired, "%Y")
+
+
+avg_rating <- aggregate(rating ~ year, episodes, mean)
+view(avg_rating)
+
+print(ggplot(avg_rating, aes(x = year, y = rating))+
+  geom_point()+
+  labs(x = "Year", y = "Average Ratings", title = "Average Doctor Who Episode Ratings by Year"))
+
+
+
+# Let's look at UK viewers
+print(ggplot(episodes, aes(x = year, y = uk_viewers))+
+        geom_point()+
+        labs(x = "Air Date", y = "UK Viewership", title = "UK Viewership of Doctor Who Episodes by Air Date"))
+
+# Do people watch regular episodes or specials more?
+print(ggplot(episodes, aes(x = year, y = uk_viewers, color = type))+
+        geom_point()+
+        labs(x = "Air Date", y = "UK Viewership", title = "UK Viewership of Doctor Who Episodes by Air Date"))
+
+
+# Since we've looked at differences by episode type, how do the ratings differ?
+print(ggplot(episodes, aes(x = year, y = rating, color = type))+
+        geom_point()+
+        labs(x = "Year", y = "Rating", title = "Rating of Doctor Who Episodes by Year"))
+
+
+# Let's look at the correlation between rating and viewers. For color, test out year (too many years) and season (season looks better). This is just a different way to see our variables
+print(ggplot(episodes, aes(x = rating, y = uk_viewers, color = year))+
+        geom_point()+
+        labs(x = "Rating", y = "UK Viewership", title = "Doctor Who Episode Rating vs UK Viewership"))
+
+
+
+print(episodes[which.max(episodes$uk_viewers),])
+```
+
+
+
+```{r}
+
+directors <- data$drwho_directors
+directors %>%
+  view()
+
+writers <- tuesdata$drwho_writers
+writers %>%
+  view()
+
+
+# There are some writer combinations with "and" that we want to remove. Also trim whitespace.
+writers <- separate_rows(writers, writer, sep = "and")
+# I assume there's going to be a problem with the whitespace, so let's check that
+writers$writer <- trimws(writers$writer)
+
+# There are some repeating writers. Let's add the frequencies of them.
+writers <- writers %>%
+  group_by(writer) %>%
+  mutate(writer_frequency = n())
+
+# Add frequency of directors
+directors <- directors %>%
+  group_by(director) %>%
+  mutate(director_frequency = n())
+
+
+# Use inner join to combine writer and directors to a "master data frame" based on story number
+df <- inner_join(episodes, writers, by = "story_number")
+df <- inner_join(df, directors, by = "story_number")
+
+
+# Who are the most popular writers? Let's plot the frequencies. DONT WRITE THEME YET, SHOW UGLY LINES FIRST
+print(ggplot(df, aes(x = writer))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer", y = "Frequency", title = "Frequency of Doctor Who Writers")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+# Frequency of director
+print(ggplot(df, aes(x = director))+
+        geom_bar()+
+        labs(x = "Doctor Who Director", y = "Frequency", title = "Frequency of Doctor Who Directors")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+
+
+
+# Now that we have the most popular writers and directors, lets see if there are any dynamic duos between a writer and director and see if there is a trend of who works with who or if its just random.
+
+df$combo <- paste(df$writer, "&", df$director)
+
+print(ggplot(df, aes(x = combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations"))
+
+# This is a mess! Let's fix this.
+print(ggplot(df, aes(x = combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+# It's still a mess! I notice two things. The names are too long. We also should only care about the combos that happen more than once.
+
+# First, make a list of combo frequencies
+df <- df %>%
+  group_by(combo) %>%
+  mutate(combo_frequency = n())
+
+# Isolate the combos that have more than 2 instances of happening
+combo_counts <- df %>%
+  filter(combo_frequency > 3)
+
+
+# Now let's plot the more frequent combos
+print(ggplot(combo_counts, aes(x = combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+# Let's isolate it to the top few. The names are still weird. Let's shorten it to the last names.
+
+# Write this function to grab the last word in a string
+extract_last_word <- function(string) {
+  words <- strsplit(string, " ")[[1]]
+  last_word <- tail(words, 1)
+  return(last_word)
+}
+
+# Apply this function to the strings in writers and directors, and paste them together in the combo column
+df$combo <- paste(sapply(df$writer, extract_last_word), "&", sapply(df$director, extract_last_word))
+
+# Plot it!
+print(ggplot(combo_counts, aes(x = combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations"))
+
+
+```
+
+
+
+```{r}
+
+print(ggplot(combo_counts, aes(x = year, y = rating, color = writer, shape = writer))+
+               geom_point()+
+        labs(x = "Year", y = "Rating", title = "Rating of Doctor Who Episodes by Year and Writer"))
+
+print(ggplot(combo_counts, aes(x = year, y = rating, color = director, shape = director))+
+               geom_point()+
+        labs(x = "Year", y = "Rating", title = "Rating of Doctor Who Episodes by Year, most popular directors"))
+
+
+# It seems that each writer has their own timeline of when they were working, and we can view the directors within that timeline. Let's just group the combos together and see what we can analyze
+print(ggplot(combo_counts, aes(x = year, y = rating, color = combo, shape = combo))+
+        geom_point()+
+        labs(x = "Year", y = "Rating", title = "Rating of Doctor Who Episodes by Year, most popular combos"))
+
+
+print(ggplot(combo_counts, aes(x = year, y = uk_viewers, color = combo, shape = combo))+
+        geom_point()+
+        labs(x = "Year", y = "UK Viewers", title = "Viewership of Doctor Who Episodes by Year, most popular combos"))
+
+
+
+
+
+
+#Using the graph we had before, let's add information to the graph that can inform the quality of each writer + director combo. Using group_by and summarize function, calculate the average ratings of each episode for each combo. Using the previous graph we made as a template, add the average ratings variable to the graph as a spectrum of color--red is low ratings, green is high ratings.
+
+#Based on this graph, what is the combo with the highest ratings? Are there combos with low ratings and high frequencies, and vice versa?
+
+
+
+
+
 
 ```

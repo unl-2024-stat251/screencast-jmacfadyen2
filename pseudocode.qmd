@@ -16,26 +16,14 @@ Use ggplot to graph the average ratings by year. Make the graph look nice and pr
 
 Analyze the graph. What does it show? Has Doctor Who been getting better or worse over the years?
 
-# The frequency of writer + director combo
-
-Clean up the data while keeping it tidy. library(dyplr) is needed for data cleaning Using the merge function, combine the list of Doctor Who writers and directors with the episodes list, so each episode is matched with a writer and director. Address any issues with NA values and whatnot.
-
-Using ggplot, make an appropriate graph showing the frequencies of directors, writers, and the combinations. To set something up for later, make another column called "combo" that is the combination of each director and writer. We will be working with strings a little bit using dyplir. Using the mutate and sub functions, remove the first names of every director and writer, and combine them with a hyphen, such as "Moffat-Haynes". For now, the graph can use the separate writer and director column.
-
-# The quality of each writer + director combo
-
-Using the graph we had before, let's add information to the graph that can inform the quality of each writer + director combo. Using group_by and summarize function, calculate the average ratings of each episode for each combo. Using the previous graph we made as a template, add the average ratings variable to the graph as a spectrum of color--red is low ratings, green is high ratings.
-
-Based on this graph, what is the combo with the highest ratings? Are there combos with low ratings and high frequencies, and vice versa?
-
-# A summarization of trends of the most popular writer + director combo (Do they make long episode or short episode? Do they make more specials than other combos? Etc)
-
-This section should be very straight forward. I will pick a writer + director combo, preferably one with high frequencies and ratings, and see how they compare to the other combos. This will require lots of data joining and cleaning, as well as group_by functions for calculations. Pick the first 5-10 combos (depending on how many combos make more than a few episodes) and calculate averages of the variables: episode duration, uk views, and how many episodes of theirs are specials. Make sure the data is tidy, where each episode has its own observation.
-
-Then, using ggplot, plot each respective variable and compare the combos. Do some combos write longer episodes than others? Does a certain combo only work on specials? Etc
-
 # The amount of viewers of each episode by season
 
 The last thing we'll observe is the amount of viewers by season. We will have to deal with missing data here, as some episodes don't have a specific season, such as specials. However, each episode has an episode number, and we can lump together the episodes based on the time interval that each season has (season 1's time interval starts with episode 1 of season 1 and ends before episode 1 of season 2). Using the interval function, label each episode with a season number in a new column.
 
 Using ggplot, make a line chart of each episode (x-axis is episode number, y-axis is number of viewers) and color the line/dot/section of the graph a different color by season. Give each special episode a unique color. Analyze the graph. What has the viewership been like over the seasons? Do specials get more or less views?
+
+# The frequency of writer + director combo
+
+Clean up the data while keeping it tidy. library(dyplr) is needed for data cleaning Using the merge function, combine the list of Doctor Who writers and directors with the episodes list, so each episode is matched with a writer and director. Address any issues with NA values and whatnot.
+
+Using ggplot, make an appropriate graph showing the frequencies of directors, writers, and the combinations. To set something up for later, make another column called "combo" that is the combination of each director and writer. We will be working with strings a little bit using dyplir. Using the mutate and sub functions, remove the first names of every director and writer, and combine them with a hyphen, such as "Moffat-Haynes". For now, the graph can use the separate writer and director column.

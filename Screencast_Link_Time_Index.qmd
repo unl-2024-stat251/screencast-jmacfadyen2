@@ -1,0 +1,27 @@
+---
+title: "Screencast Link and Time Index"
+author: "Jack Macfadyen"
+date: "2024-04-30"
+output: html
+categories: project
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+[\[Link to
+screencast!\]](https://youtu.be/edMwKWXTYU8 "STAT 251 Screencast - Doctor Who Dataset")
+
+Time stamps:
+
+1.  Working with dates (10:47)
+
+2.  Data visualization (6:39) (14:37) (45:10) (52:33) (1:02:30)
+
+3.  Joining data (41:58)
+
+4.  Working with strings (35:07) (51:25) (57:39)
+
+5.  Creating functions (57:39)
+
+6.  Data Cleaning (55:14)

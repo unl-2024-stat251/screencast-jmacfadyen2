@@ -1,0 +1,135 @@
+---
+title: "Screencast Code"
+author: "Jack Macfadyen"
+date: "2024-04-30"
+output: html
+categories: project
+---
+
+```{r}
+library(tidytuesdayR)
+library(tidyverse)
+
+data <- tidytuesdayR::tt_load('2023-11-28')
+data
+head(data)
+
+episodes <- data$drwho_episodes
+directors <- data$drwho_directors
+writers <- data$drwho_writers
+
+episodes %>%
+  view()
+```
+
+```{r}
+library(ggplot2)
+
+print(ggplot(episodes, aes(x = first_aired, y = rating))+
+        geom_point()+
+        labs(x = "Date Aired", y = "Episode Rating", title = "Doctor Who Episode Ratings Over Time"))
+
+
+class(episodes$first_aired)
+episodes$year <- format(episodes$first_aired, "%Y")
+
+avg_rating <- aggregate(rating ~ year, episodes, mean)
+avg_rating %>%
+  view()
+
+print(ggplot(avg_rating, aes(x = year, y = rating))+
+        geom_point()+
+        labs(x = "Year", y = "Average Ratings", title = "Average Doctor Who Episode Ratings by Year"))
+
+print(episodes[which.max(episodes$rating),])
+print(episodes[which.min(episodes$rating),])
+
+print(ggplot(episodes, aes(x = year, y = uk_viewers))+
+        geom_point()+
+        labs(x = "Year", y = "UK Viewership", title = "UK Viewership of Doctor Who Episodes by Year"))
+
+print(ggplot(episodes, aes(x = year, y = uk_viewers, color = type, shape = type))+
+        geom_point()+
+        labs(x = "Year", y = "UK Viewership", title = "UK Viewership of Doctor Who Episodes by Year"))
+
+
+print(ggplot(episodes, aes(x = year, y = rating, color = type, shape = type))+
+        geom_point()+
+        labs(x = "Year", y = "Rating", title = "Rating of Doctor Who Episodes by Year"))
+
+
+print(ggplot(episodes, aes(x = rating, y = uk_viewers, color = season_number))+
+        geom_point()+
+        labs(x = "Year", y = "UK Viewership", title = "Doctor Who Episode Ratings vs UK Viewership"))
+
+
+print(episodes[which.max(episodes$uk_viewers),])
+print(episodes[which.min(episodes$uk_viewers),])
+
+```
+
+```{r}
+directors %>%
+  view()
+
+directors <- directors %>%
+  group_by(director) %>%
+  mutate(director_frequency = n())
+
+
+writers %>%
+  view()
+
+writers <- separate_rows(writers, writer, sep = " and ")
+writers$writer <- trimws(writers$writer)
+
+writers <- writers %>%
+  group_by(writer) %>%
+  mutate(writer_frequency = n())
+
+
+df <- inner_join(episodes, writers, by = "story_number")
+df <- inner_join(df, directors, by = "story_number")
+
+
+print(ggplot(df, aes(x = director))+
+        geom_bar()+
+        labs(x = "Doctor Who Episode Director", y = "Frequency", title = "Frequency of Doctor Who Episode Directors")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+print(ggplot(df, aes(x = writer))+
+        geom_bar()+
+        labs(x = "Doctor Who Episode Writer", y = "Frequency", title = "Frequency of Doctor Who Episode Writers")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+
+df$combo <- paste(df$writer, "&", df$director)
+
+print(ggplot(df, aes(x =combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations")+
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0)))
+
+
+df <- df %>%
+  group_by(combo) %>%
+  mutate(combo_frequency = n())
+
+combo_counts <- df %>%
+  filter(combo_frequency > 3)
+
+
+extract_last_word <- function(string){
+  words <- strsplit(string, " ")[[1]]
+  last_word <- tail(words, 1)
+  return(last_word)
+}
+
+df$combo <- paste(sapply(df$writer, extract_last_word), "&", sapply(df$director, extract_last_word))
+
+print(ggplot(combo_counts, aes(x = combo))+
+        geom_bar()+
+        labs(x = "Doctor Who Writer/Director Combination", y = "Frequency", title = "Frequency of Doctor Who Writer/Director Combinations")+
+        theme(axis.text.x = element_text(angle = 0)))
+
+```
